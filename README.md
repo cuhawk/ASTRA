@@ -56,6 +56,30 @@ A substantial portion of the analysis core is vendored from a private reference 
 
 ---
 
+## Running locally
+
+Prereqs: Python 3.12, Node 22+, npm, Redis running locally.
+
+1. Backend
+   ```
+   uv venv --python 3.12 .venv
+   uv pip install -e ".[dev]"
+   cp .env.example .env   # populate ASTRA_GITHUB_CLIENT_ID, ASTRA_GITHUB_CLIENT_SECRET,
+                          # ASTRA_VAULT_KEK_HEX (`python -c "import secrets; print(secrets.token_hex(32))"`),
+                          # ASTRA_SESSION_SECRET, ASTRA_GEMINI_API_KEY.
+   just dev-backend       # http://127.0.0.1:8000
+   ```
+
+2. Frontend
+   ```
+   cd frontend && cp .env.example .env.local
+   cd .. && just dev-frontend   # http://127.0.0.1:3000
+   ```
+
+3. Open http://127.0.0.1:3000 and click Sign in with GitHub.
+
+---
+
 ## License
 
 TBD.

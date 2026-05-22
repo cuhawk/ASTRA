@@ -8,9 +8,9 @@ default:
 dev-backend:
     .venv/bin/uvicorn backend.main:create_app --factory --reload --host 127.0.0.1 --port 8000
 
-# Frontend Next.js dev server (wired in Session 8)
+# Frontend Next.js dev server
 dev-frontend:
-    @echo "[stub] dev-frontend — wire Next.js in Session 8 (frontend-shell)"
+    npm --prefix frontend run dev
 
 # Worker process for analysis jobs (wired in Session 6)
 dev-worker:

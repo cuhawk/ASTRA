@@ -41,7 +41,8 @@ class Settings(BaseSettings):
 
     daily_spend_cap_usd: float = 20.0
 
-    base_url: str = "http://127.0.0.1:8000"
+    base_url: str = "http://127.0.0.1:3000"
+    frontend_origin: str = "http://127.0.0.1:3000"
 
 
 @lru_cache

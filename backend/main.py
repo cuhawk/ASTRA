@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 import redis.asyncio as aioredis
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import Settings, get_settings
 from backend.db.connection import init_db
@@ -25,6 +26,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(title="ASTRA", lifespan=lifespan)
     app.state.settings = settings
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[settings.frontend_origin, settings.frontend_origin.replace("127.0.0.1", "localhost")],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     from backend.auth.routes import router as auth_router
     from backend.coverage.routes import router as coverage_router
