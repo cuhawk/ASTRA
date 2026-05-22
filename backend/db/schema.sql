@@ -89,3 +89,17 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_runs_user_status ON runs(user_id, status);
+
+CREATE TABLE IF NOT EXISTS features (
+    id                  TEXT    PRIMARY KEY,
+    run_id              TEXT    NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    name                TEXT    NOT NULL,
+    created_at          INTEGER NOT NULL,
+    last_run_at         INTEGER,
+    last_status         TEXT,
+    error               TEXT,
+    matched_functions   INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (run_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_features_run ON features(run_id);
