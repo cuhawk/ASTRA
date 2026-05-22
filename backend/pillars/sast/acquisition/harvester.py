@@ -3,7 +3,7 @@
 # upstream-sha:  83cae232b94e7998ef543c72e8e7302617d438a0
 # imported-on:   2026-05-22
 # license:       proprietary — see upstream repo
-# modifications: port from chrome-devtools MCP recipe to a Playwright-driven async Python module; hidden-map brute-force recon (upstream Step 7) deliberately deferred
+# modifications: port from chrome-devtools MCP recipe to a Playwright-driven async Python module; hidden-map brute-force recon (upstream Step 7) deliberately deferred; webpack lazy-chunk enumeration integrated post-navigation (2026-05-23)
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ from urllib.parse import urldefrag, urljoin, urlparse
 
 from playwright.async_api import async_playwright
 from pydantic import BaseModel
+
+from backend.pillars.sast.acquisition.webpack_chunk_enum import enumerate_webpack_chunks
 
 _JS_SUFFIXES = (".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx")
 _SOURCEMAP_PRAGMA = re.compile(rb"(?m)^[ \t]*//[#@][ \t]*sourceMappingURL=([^\s]+)[ \t]*$")
@@ -55,6 +57,8 @@ class HarvestResult(BaseModel):
     hosts_seen: list[str]
     out_of_scope_skipped: list[str]
     pages_visited: list[str]
+    webpack_chunks_found: int = 0
+    webpack_diag: dict | None = None
 
 
 def _host_port(parsed) -> str:
@@ -126,6 +130,8 @@ class Harvester:
         out_of_scope_skipped: set[str] = set()
         pages_visited: list[str] = []
         visited_urls: set[str] = set()
+        webpack_chunks_found = 0
+        webpack_diag: dict | None = None
 
         queue: list[tuple[str, int]] = [(urldefrag(url)[0], 0)]
 
@@ -167,6 +173,24 @@ class Harvester:
                                 )
                             except Exception:
                                 pass
+
+                            # Enumerate webpack lazy chunks the bundle knows about
+                            # but did not eagerly load during navigation. Feed
+                            # the URLs into `captured` so they flow through the
+                            # same scope / dedup / fetch path as normal scripts.
+                            try:
+                                enum_result = await enumerate_webpack_chunks(page)
+                                webpack_diag = enum_result.diag
+                                for chunk_url in enum_result.urls:
+                                    abs_url = urljoin(page_url, chunk_url)
+                                    captured.append((abs_url, "script"))
+                                    webpack_chunks_found += 1
+                            except Exception:
+                                # Defensive: enumerate_webpack_chunks already
+                                # swallows; this is belt-and-braces for unexpected
+                                # blow-ups so non-webpack sites keep working.
+                                if webpack_diag is None:
+                                    webpack_diag = {"error": "enumerate_failed"}
 
                             seen_js: set[str] = set()
                             for req_url, rtype in captured:
@@ -233,6 +257,8 @@ class Harvester:
             hosts_seen=sorted(hosts_seen),
             out_of_scope_skipped=sorted(out_of_scope_skipped),
             pages_visited=pages_visited,
+            webpack_chunks_found=webpack_chunks_found,
+            webpack_diag=webpack_diag,
         )
 
     async def _fetch_asset(
