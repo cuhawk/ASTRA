@@ -4,9 +4,9 @@
 default:
     @just --list
 
-# Backend FastAPI dev server (wired in Session 4)
+# Backend FastAPI dev server. Requires local Redis + .env populated (see .env.example).
 dev-backend:
-    @echo "[stub] dev-backend — wire FastAPI + uvicorn in Session 4 (auth-and-quota)"
+    .venv/bin/uvicorn backend.main:create_app --factory --reload --host 127.0.0.1 --port 8000
 
 # Frontend Next.js dev server (wired in Session 8)
 dev-frontend:
