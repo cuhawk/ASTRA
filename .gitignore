@@ -1,0 +1,66 @@
+# ===== ASTRA-specific =====
+# Per-run user data: raw JS, sourcemaps, Kuzu DB, LanceDB, coverage snapshots, advisor transcripts.
+runs/
+# Session-local memory scratchpad (not source of truth)
+memory.md
+
+# ===== Secrets =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.eggs/
+*.egg-info/
+*.egg
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+.turbo/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Embedded DB artifacts =====
+*.kuzu
+*.kuzu-wal
+*.lance
+lancedb/
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+
+# ===== Editor / OS =====
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===== Logs =====
+*.log
+logs/
