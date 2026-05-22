@@ -29,10 +29,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from backend.auth.routes import router as auth_router
     from backend.llm.routes import router as llm_router
     from backend.quota.routes import router as quota_router
+    from backend.runs.routes import router as runs_router
+    from backend.runs.worker import make_executor
 
     app.include_router(auth_router)
     app.include_router(quota_router)
     app.include_router(llm_router)
+    app.include_router(runs_router)
+
+    app.state.run_executor = make_executor(settings)
 
     @app.get("/healthz")
     async def healthz() -> dict[str, bool]:

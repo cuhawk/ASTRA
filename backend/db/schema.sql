@@ -71,3 +71,21 @@ CREATE TABLE IF NOT EXISTS audit_llm_calls (
 
 CREATE INDEX IF NOT EXISTS idx_audit_llm_calls_user_at ON audit_llm_calls(user_id, at);
 CREATE INDEX IF NOT EXISTS idx_audit_llm_calls_at      ON audit_llm_calls(at);
+
+-- Run lifecycle. `id` doubles as the slug under runs/<user_id>/<run_id>/
+-- on disk (managed by backend.pillars.memory.runs.RunLayout).
+CREATE TABLE IF NOT EXISTS runs (
+    id           TEXT    PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    url          TEXT,
+    status       TEXT    NOT NULL,
+    error        TEXT,
+    created_at   INTEGER NOT NULL,
+    started_at   INTEGER,
+    finished_at  INTEGER,
+    files        INTEGER NOT NULL DEFAULT 0,
+    functions    INTEGER NOT NULL DEFAULT 0,
+    edges        INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_runs_user_status ON runs(user_id, status);

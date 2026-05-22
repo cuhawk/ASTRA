@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     db_path: str = "./astra.db"
     redis_url: str = "redis://localhost:6379/0"
+    runs_root: str = "./runs"
 
     session_secret: str = Field(default="dev-only-not-for-prod-change-me-32-bytes")
     session_max_age_s: int = 60 * 60 * 24 * 14  # 14 days
