@@ -6,7 +6,9 @@ This file tracks every component copied or `git subtree`-imported from an upstre
 
 | Short name | Upstream URL                          | License (as of import) |
 |------------|---------------------------------------|------------------------|
-| tlxkull    | https://github.com/cuhawk/tlxkull     | (record on first import) |
+| tlxkull    | https://github.com/cuhawk/tlxkull     | proprietary — no LICENSE in upstream root |
+
+Local working checkout: `~/Documents/TLX` (use as source for re-vendor; verify SHA before copying).
 
 ## Vendored components
 
@@ -14,7 +16,10 @@ This file tracks every component copied or `git subtree`-imported from an upstre
 
 | ASTRA path                        | Upstream path                       | Upstream SHA | Imported on (UTC) | Method      | Notes |
 |-----------------------------------|-------------------------------------|--------------|-------------------|-------------|-------|
-| _(none yet — Session 1 fills this)_ |                                   |              |                   |             |       |
+| backend/pillars/sast              | tlx/modules/js_analyzer             | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | full module; node_modules/ gitignored; JSON taxonomies in `taxonomies/` are unstamped (no comment syntax) — provenance for them is implicit via this row |
+| backend/pillars/memory            | tlx/modules/rag                     | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | swap ChromaDB → LanceDB pending (Session 2) |
+| backend/mcp                       | tlx/mcp_server                      | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | adapt tool surface for ASTRA in later session |
+| backend/prompts                   | tlx/prompts                         | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | upstream contains only `base_system.md`; generalize + extend in Session 5/9 |
 
 ## Per-file header convention
 
