@@ -31,6 +31,15 @@ class Settings(BaseSettings):
 
     free_tier_daily_limit: int = 100
 
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_embed_model: str = "text-embedding-004"
+
+    anthropic_default_model: str = "claude-sonnet-4-5-20250929"
+    anthropic_opus_model: str = "claude-opus-4-5-20250929"
+
+    daily_spend_cap_usd: float = 20.0
+
     base_url: str = "http://127.0.0.1:8000"
 
 

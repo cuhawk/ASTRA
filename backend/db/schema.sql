@@ -50,3 +50,24 @@ CREATE TABLE IF NOT EXISTS audit_quota (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_quota_user_bucket ON audit_quota(user_id, bucket);
+
+-- Append-only log of every LLM call (free + pro). Cost computed at call
+-- time from token counts × per-model rate. Authoritative daily spend
+-- counter lives in Redis (`llm_spend:<provider>:<YYYY-MM-DD>`); this
+-- table is the forensic / billing surface.
+CREATE TABLE IF NOT EXISTS audit_llm_calls (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id             INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    provider            TEXT    NOT NULL,
+    model               TEXT    NOT NULL,
+    reason              TEXT    NOT NULL,
+    prompt_tokens       INTEGER NOT NULL DEFAULT 0,
+    completion_tokens   INTEGER NOT NULL DEFAULT 0,
+    cost_usd            REAL    NOT NULL DEFAULT 0.0,
+    outcome             TEXT    NOT NULL,
+    duration_ms         INTEGER NOT NULL DEFAULT 0,
+    at                  INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_llm_calls_user_at ON audit_llm_calls(user_id, at);
+CREATE INDEX IF NOT EXISTS idx_audit_llm_calls_at      ON audit_llm_calls(at);
