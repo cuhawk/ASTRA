@@ -136,7 +136,7 @@ async def test_harvester_integrates_chunks(tmp_path: Path) -> None:
     server = _serve(docroot, port)
     try:
         host = f"127.0.0.1:{port}"
-        harvester = Harvester(scope=[host], depth=0)
+        harvester = Harvester(scope=[host], depth=0, enable_webpack_chunk_enum=True)
         raw_dir = tmp_path / "raw"
         result = await harvester.acquire(f"http://{host}/", raw_dir)
     finally:

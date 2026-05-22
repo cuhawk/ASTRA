@@ -110,6 +110,7 @@ class Harvester:
         timeout_ms: int = 15000,
         user_agent: str | None = None,
         max_concurrency: int = 8,
+        enable_webpack_chunk_enum: bool = False,
     ) -> None:
         self.scope = [s.lower() for s in scope]
         self.depth = depth
@@ -121,6 +122,12 @@ class Harvester:
         # ~max_concurrency * 4. Default chosen to saturate a typical CDN
         # without 429-ing single-host targets.
         self.max_concurrency = max(1, max_concurrency)
+        # Webpack lazy-chunk enumeration is currently disabled: the brute
+        # `wpr.u(0..20000)` walk drags in every numerically-IDed chunk
+        # (e.g. 0..200+.bundle.js on Netlify) including ones the app never
+        # actually reaches. Re-enable once the snippet does a smarter scan
+        # (regex over webpack runtime / chunkLoadingGlobal seed only).
+        self.enable_webpack_chunk_enum = enable_webpack_chunk_enum
 
     def _in_scope(self, url: str) -> bool:
         parsed = urlparse(url)
@@ -182,23 +189,25 @@ class Harvester:
                             except Exception:
                                 pass
 
-                            # Enumerate webpack lazy chunks the bundle knows about
-                            # but did not eagerly load during navigation. Feed
-                            # the URLs into `captured` so they flow through the
-                            # same scope / dedup / fetch path as normal scripts.
-                            try:
-                                enum_result = await enumerate_webpack_chunks(page)
-                                webpack_diag = enum_result.diag
-                                for chunk_url in enum_result.urls:
-                                    abs_url = urljoin(page_url, chunk_url)
-                                    captured.append((abs_url, "script"))
-                                    webpack_chunks_found += 1
-                            except Exception:
-                                # Defensive: enumerate_webpack_chunks already
-                                # swallows; this is belt-and-braces for unexpected
-                                # blow-ups so non-webpack sites keep working.
-                                if webpack_diag is None:
-                                    webpack_diag = {"error": "enumerate_failed"}
+                            # Webpack lazy-chunk enumeration is opt-in (see
+                            # ctor). The brute `wpr.u(0..20000)` walk drags in
+                            # every numerically-IDed chunk Netlify-style apps
+                            # have hundreds of, including ones the app never
+                            # actually reaches. Disabled by default; re-enable
+                            # once the snippet does a smarter scan.
+                            if self.enable_webpack_chunk_enum:
+                                try:
+                                    enum_result = await enumerate_webpack_chunks(page)
+                                    webpack_diag = enum_result.diag
+                                    for chunk_url in enum_result.urls:
+                                        abs_url = urljoin(page_url, chunk_url)
+                                        captured.append((abs_url, "script"))
+                                        webpack_chunks_found += 1
+                                except Exception:
+                                    if webpack_diag is None:
+                                        webpack_diag = {"error": "enumerate_failed"}
+                            else:
+                                webpack_diag = {"disabled": True}
 
                             # Filter + dedupe captured URLs first, then fetch
                             # in parallel under a semaphore. The serial version
