@@ -19,6 +19,26 @@ _JS_SUFFIXES = (".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx")
 _SOURCEMAP_PRAGMA = re.compile(rb"(?m)^[ \t]*//[#@][ \t]*sourceMappingURL=([^\s]+)[ \t]*$")
 _PRAGMA_TAIL_BYTES = 2048
 
+# Source map v3 marker. Validated against the first 4 KiB of any candidate map
+# body to reject SPA index.html fallbacks (200 OK + HTML) before writing to
+# disk. See TLX bin/sourcemap_recon.py:111 — same validator, ported verbatim.
+_SOURCEMAP_VERSION_REGEX = re.compile(rb'"version"\s*:\s*3')
+
+
+def _looks_like_sourcemap(body: bytes, headers: dict[str, str]) -> bool:
+    if not body:
+        return False
+    ctype = (headers.get("content-type") or "").lower()
+    # Hard reject obvious HTML — SPA catch-all routes (Netlify, Vercel, CRA)
+    # return 200 + index.html for missing .map paths.
+    if "html" in ctype:
+        return False
+    head = body[:4096]
+    if _SOURCEMAP_VERSION_REGEX.search(head):
+        return True
+    stripped = head.lstrip()
+    return stripped.startswith(b"{") and b'"sources"' in head
+
 
 class HarvestedAsset(BaseModel):
     url: str
@@ -290,6 +310,9 @@ class Harvester:
         if not resp.ok:
             return None
         body = await resp.body()
+        headers = {k.lower(): v for k, v in (resp.headers or {}).items()}
+        if not _looks_like_sourcemap(body, headers):
+            return None
         map_path = js_path.with_suffix(js_path.suffix + ".map")
         map_path.write_bytes(body)
         return map_path.resolve()
