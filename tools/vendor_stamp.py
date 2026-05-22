@@ -20,18 +20,18 @@ from pathlib import Path
 STAMPED_MARKER = "vendored-from:"
 UPSTREAM_URL = "https://github.com/cuhawk/tlxkull"
 
-EXT_COMMENT = {".py": "#", ".md": "<!--"}
-SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+EXT_COMMENT = {".py": "#", ".md": "<!--", ".js": "//", ".mjs": "//", ".cjs": "//", ".ts": "//"}
+SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "node_modules"}
 
 
-def make_py_header(rel_path: str, sha: str, imported_on: str) -> str:
+def make_line_header(rel_path: str, sha: str, imported_on: str, tok: str) -> str:
     return (
-        f"# vendored-from: {UPSTREAM_URL}\n"
-        f"# upstream-path: {rel_path}\n"
-        f"# upstream-sha:  {sha}\n"
-        f"# imported-on:   {imported_on}\n"
-        f"# license:       proprietary — see upstream repo\n"
-        f"# modifications: none\n"
+        f"{tok} vendored-from: {UPSTREAM_URL}\n"
+        f"{tok} upstream-path: {rel_path}\n"
+        f"{tok} upstream-sha:  {sha}\n"
+        f"{tok} imported-on:   {imported_on}\n"
+        f"{tok} license:       proprietary — see upstream repo\n"
+        f"{tok} modifications: none\n"
         f"\n"
     )
 
@@ -56,16 +56,17 @@ def stamp_one(path: Path, upstream_rel: str, sha: str, imported_on: str) -> bool
     body = path.read_text(encoding="utf-8", errors="replace")
     if STAMPED_MARKER in body[:1024]:
         return False
-    if ext == ".py":
-        header = make_py_header(upstream_rel, sha, imported_on)
+    if ext == ".md":
+        header = make_md_header(upstream_rel, sha, imported_on)
+        new_body = header + body
+    else:
+        tok = EXT_COMMENT[ext]
+        header = make_line_header(upstream_rel, sha, imported_on, tok)
         if body.startswith("#!"):
             first_nl = body.find("\n") + 1
             new_body = body[:first_nl] + header + body[first_nl:]
         else:
             new_body = header + body
-    else:  # .md
-        header = make_md_header(upstream_rel, sha, imported_on)
-        new_body = header + body
     path.write_text(new_body, encoding="utf-8")
     return True
 
