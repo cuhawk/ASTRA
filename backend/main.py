@@ -37,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     from backend.auth.routes import router as auth_router
     from backend.coverage.routes import router as coverage_router
+    from backend.cypher.routes import router as cypher_router
     from backend.llm.routes import router as llm_router
     from backend.quota.routes import router as quota_router
     from backend.runs.routes import router as runs_router
@@ -47,6 +48,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(llm_router)
     app.include_router(runs_router)
     app.include_router(coverage_router)
+    app.include_router(cypher_router)
 
     app.state.run_executor = make_executor(settings)
 
