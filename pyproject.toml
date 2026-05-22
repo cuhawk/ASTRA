@@ -9,6 +9,7 @@ dependencies = [
     "kuzu>=0.6.0",
     "lancedb>=0.13.0",
     "pyarrow>=17.0.0",
+    "playwright>=1.48",
     "pydantic>=2.7",
 ]
 

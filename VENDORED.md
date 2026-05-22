@@ -20,6 +20,8 @@ Local working checkout: `~/Documents/TLX` (use as source for re-vendor; verify S
 | backend/pillars/memory            | tlx/modules/rag                     | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | swap ChromaDB → LanceDB pending (Session 2) |
 | backend/mcp                       | tlx/mcp_server                      | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | adapt tool surface for ASTRA in later session |
 | backend/prompts                   | tlx/prompts                         | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | copy + stamp | upstream contains only `base_system.md`; generalize + extend in Session 5/9 |
+| backend/pillars/sast/acquisition/sourcemap.py | bin/explode_sourcemap.py | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | port (rewrite) | converted CLI script to importable API; pydantic v2 `SourcemapResult`; idempotent identical-bytes skip; missing-sourcesContent disambiguated from malformed; manifest schema preserved + extended with `missing_content` |
+| backend/pillars/sast/acquisition/harvester.py | .claude/skills/js-harvest/SKILL.md | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22 | port | upstream skill drove chrome-devtools MCP from a TUI; ported to a Playwright async Python module with the same enumeration / sourcemap discovery recipe; hidden-map brute-force recon (upstream Step 7) deferred to a later session |
 
 ## Per-file header convention
 
