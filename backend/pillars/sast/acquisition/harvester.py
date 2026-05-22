@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import re
 from pathlib import Path
@@ -108,11 +109,18 @@ class Harvester:
         depth: int = 2,
         timeout_ms: int = 15000,
         user_agent: str | None = None,
+        max_concurrency: int = 8,
     ) -> None:
         self.scope = [s.lower() for s in scope]
         self.depth = depth
         self.timeout_ms = timeout_ms
         self.user_agent = user_agent
+        # Concurrent in-flight `_fetch_asset` coroutines per page-load. Each
+        # fetch does up to 4 HTTP requests (asset body + pragma/header/probe
+        # sourcemap candidates), so the effective network parallelism is
+        # ~max_concurrency * 4. Default chosen to saturate a typical CDN
+        # without 429-ing single-host targets.
+        self.max_concurrency = max(1, max_concurrency)
 
     def _in_scope(self, url: str) -> bool:
         parsed = urlparse(url)
@@ -192,7 +200,14 @@ class Harvester:
                                 if webpack_diag is None:
                                     webpack_diag = {"error": "enumerate_failed"}
 
+                            # Filter + dedupe captured URLs first, then fetch
+                            # in parallel under a semaphore. The serial version
+                            # of this loop blocked one chunk at a time, which
+                            # turns a 200+ chunk SPA into a several-minute
+                            # acquire. asset dict insertion / set updates are
+                            # safe under asyncio (single-threaded event loop).
                             seen_js: set[str] = set()
+                            to_fetch: list[str] = []
                             for req_url, rtype in captured:
                                 if not _is_js_url(req_url, rtype):
                                     continue
@@ -200,19 +215,32 @@ class Harvester:
                                 if clean in seen_js or clean in assets:
                                     continue
                                 seen_js.add(clean)
-
                                 if not self._in_scope(clean):
                                     out_of_scope_skipped.add(
                                         urlparse(clean).hostname or clean
                                     )
                                     continue
+                                to_fetch.append(clean)
 
-                                asset = await self._fetch_asset(
-                                    context, clean, raw_dir, maps_missing
+                            if to_fetch:
+                                sem = asyncio.Semaphore(self.max_concurrency)
+
+                                async def _fetch_one(
+                                    clean_url: str,
+                                ) -> tuple[str, HarvestedAsset | None]:
+                                    async with sem:
+                                        return clean_url, await self._fetch_asset(
+                                            context, clean_url, raw_dir, maps_missing
+                                        )
+
+                                results = await asyncio.gather(
+                                    *(_fetch_one(u) for u in to_fetch),
+                                    return_exceptions=False,
                                 )
-                                if asset is not None:
-                                    assets[clean] = asset
-                                    hosts_seen.add(_host_port(urlparse(clean)))
+                                for clean_url, asset in results:
+                                    if asset is not None:
+                                        assets[clean_url] = asset
+                                        hosts_seen.add(_host_port(urlparse(clean_url)))
 
                             if page_depth < self.depth:
                                 try:

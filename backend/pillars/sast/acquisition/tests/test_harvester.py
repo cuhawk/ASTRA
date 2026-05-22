@@ -135,6 +135,41 @@ async def test_scope_violation_raises(tmp_path: Path) -> None:
         await harvester.acquire("http://example.invalid/", tmp_path / "raw")
 
 
+async def test_parallel_fetches_preserve_correctness(tmp_path: Path) -> None:
+    """Page references 12 distinct .js bundles. With max_concurrency=4 the
+    harvester must still fetch all 12 and assign them to the correct URL
+    keys (no race condition mis-assigning asset bodies)."""
+    docroot = tmp_path / "site"
+    docroot.mkdir()
+    scripts = [f"chunk{i}.js" for i in range(12)]
+    for s in scripts:
+        (docroot / s).write_text(f"// {s}\nconsole.log('{s}');\n", encoding="utf-8")
+    index_body = (
+        "<!doctype html><html><body>"
+        + "".join(f'<script src="{s}"></script>' for s in scripts)
+        + "</body></html>"
+    )
+    (docroot / "index.html").write_text(index_body, encoding="utf-8")
+
+    port = _free_port()
+    server = _serve(docroot, port)
+    try:
+        host = f"127.0.0.1:{port}"
+        harvester = Harvester(scope=[host], max_concurrency=4)
+        result = await harvester.acquire(f"http://{host}/", tmp_path / "raw")
+    finally:
+        server.shutdown()
+
+    assert result.files == 12, [a.url for a in result.assets]
+    # Each saved body must match the URL — proves no asset-body cross-assignment.
+    for asset in result.assets:
+        body = asset.saved_to.read_text(encoding="utf-8")
+        name = asset.url.rsplit("/", 1)[-1]
+        assert f"console.log('{name}')" in body, (
+            f"asset {asset.url} body mismatch: {body!r}"
+        )
+
+
 class _SpaFallbackHandler(SimpleHTTPRequestHandler):
     """Simulates an SPA host (Netlify-style) where any .map probe returns
     200 OK + the SPA index.html, not a real sourcemap."""
