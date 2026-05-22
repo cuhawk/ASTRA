@@ -16,9 +16,9 @@ dev-frontend:
 dev-worker:
     @echo "[stub] dev-worker — wire RQ/Dramatiq + Redis in Session 6 (callgraph-and-taint-api)"
 
-# Run all tests
+# Run all backend tests
 test:
-    @echo "[stub] test — wire pytest + vitest aggregator once backend/frontend scaffold lands"
+    .venv/bin/python -m pytest -v
 
 # Deploy to production host (wired in Session 10)
 deploy:
