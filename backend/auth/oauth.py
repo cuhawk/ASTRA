@@ -40,7 +40,7 @@ class GitHubOAuth:
             "code": code,
             "redirect_uri": self.redirect_uri,
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 _TOKEN_URL,
                 data=payload,
@@ -60,7 +60,7 @@ class GitHubOAuth:
             "Authorization": f"Bearer {access_token}",
             "Accept": "application/vnd.github+json",
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.get(_USER_URL, headers=headers)
             resp.raise_for_status()
             user = resp.json()

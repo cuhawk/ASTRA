@@ -6,12 +6,16 @@ from typing import Literal
 from pydantic import BaseModel
 
 Provider = Literal["gemini", "anthropic"]
-Reason = Literal["nl_to_cypher", "chain_triage", "embed", "probe"]
+Reason = Literal["nl_to_cypher", "chain_triage", "embed", "probe", "chat"]
 
 
 class LLMUsage(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    # Subset of prompt_tokens served from Gemini's implicit/explicit context
+    # cache. Billed at a reduced rate by the provider; populated only when
+    # the response actually carries cache metadata.
+    cached_prompt_tokens: int = 0
 
 
 class LLMResponse(BaseModel):
@@ -54,4 +58,14 @@ def cost_for(provider: Provider, model: str, usage: LLMUsage) -> float:
     if rate is None:
         return 0.0
     p_rate, c_rate = rate
-    return (usage.prompt_tokens * p_rate + usage.completion_tokens * c_rate) / 1_000_000
+    cached = max(0, min(usage.cached_prompt_tokens, usage.prompt_tokens))
+    uncached = usage.prompt_tokens - cached
+    # Gemini implicit/explicit cached input is billed at 25% of normal rate.
+    # Anthropic doesn't surface cached_prompt_tokens via this path yet, so
+    # for them `cached` stays 0 and the math collapses to the old formula.
+    cache_rate_factor = 0.25 if provider == "gemini" else 1.0
+    return (
+        uncached * p_rate
+        + cached * p_rate * cache_rate_factor
+        + usage.completion_tokens * c_rate
+    ) / 1_000_000

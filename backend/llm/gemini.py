@@ -36,10 +36,29 @@ class GeminiClient:
         max_tokens: int = 1024,
         temperature: float = 0.2,
     ) -> LLMResponse:
+        return await self.generate(
+            contents=[{"role": "user", "parts": [{"text": prompt}]}],
+            system=system,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+
+    async def generate(
+        self,
+        contents: list[dict],
+        *,
+        system: str | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.2,
+    ) -> LLMResponse:
+        """Multi-turn generation. `contents` is a list of {role, parts} dicts
+        where role is "user" or "model". Used by the chat service so the
+        stable prefix (system + run-context-priming turn) can hit Gemini's
+        implicit context cache."""
         self._require_key()
 
         body: dict = {
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "contents": contents,
             "generationConfig": {
                 "maxOutputTokens": max_tokens,
                 "temperature": temperature,
@@ -79,6 +98,7 @@ class GeminiClient:
         usage = LLMUsage(
             prompt_tokens=int(meta.get("promptTokenCount", 0)),
             completion_tokens=int(meta.get("candidatesTokenCount", 0)),
+            cached_prompt_tokens=int(meta.get("cachedContentTokenCount", 0)),
         )
 
         return LLMResponse(

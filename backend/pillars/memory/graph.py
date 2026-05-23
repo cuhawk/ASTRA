@@ -144,7 +144,17 @@ class GraphStore:
         cypher: str,
         params: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        result = self._conn.execute(cypher, parameters=params or {})
+        try:
+            result = self._conn.execute(cypher, parameters=params or {})
+        except RuntimeError as e:
+            # Kuzu raises "Binder exception: Table X does not exist." when a
+            # query references a node/rel label that was never created. For an
+            # empty run (zero functions/edges) this is the expected state —
+            # surface it as an empty result rather than a 500.
+            msg = str(e)
+            if "does not exist" in msg and "Binder exception" in msg:
+                return []
+            raise
         cols = result.get_column_names()
         rows: list[dict[str, Any]] = []
         while result.has_next():

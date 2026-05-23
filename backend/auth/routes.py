@@ -8,6 +8,7 @@ import aiosqlite
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
 
+from backend.audit.events import emit as emit_event
 from backend.auth.deps import get_db, get_settings_dep, require_user
 from backend.auth.oauth import GitHubOAuth
 from backend.auth.sessions import (
@@ -74,6 +75,14 @@ async def github_callback(
     gh_user = await oauth.fetch_user(token)
     user_id = await upsert_github_user(db, gh_user)
     session = await create_session(db, user_id, settings.session_max_age_s)
+    await emit_event(
+        db,
+        user_id=user_id,
+        action="auth.login",
+        entity="session",
+        entity_id=session.id[:12],
+        payload={"login": gh_user.login},
+    )
 
     signer = make_signer(settings.session_secret)
     signed = sign_sid(signer, session.id)

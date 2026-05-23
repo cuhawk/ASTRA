@@ -1,21 +1,79 @@
 type Status = string | null | undefined;
 
-const palette: Record<string, string> = {
-  pending: "bg-amber-900/40 text-amber-300 border-amber-700/50",
-  acquiring: "bg-amber-900/40 text-amber-300 border-amber-700/50",
-  analyzing: "bg-amber-900/40 text-amber-300 border-amber-700/50",
-  recording: "bg-amber-900/40 text-amber-300 border-amber-700/50",
-  done: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
-  failed: "bg-red-900/40 text-red-300 border-red-700/50",
+interface Tone {
+  ring: string;
+  text: string;
+  dot: string;
+  pulse: boolean;
+  bg: string;
+}
+
+const palette: Record<string, Tone> = {
+  pending: {
+    ring: "border-amber-700/50",
+    text: "text-amber-300",
+    dot: "bg-amber-400",
+    pulse: true,
+    bg: "bg-amber-950/30",
+  },
+  acquiring: {
+    ring: "border-amber-700/50",
+    text: "text-amber-300",
+    dot: "bg-amber-400",
+    pulse: true,
+    bg: "bg-amber-950/30",
+  },
+  analyzing: {
+    ring: "border-cyan-700/50",
+    text: "text-cyan-300",
+    dot: "bg-cyan-400",
+    pulse: true,
+    bg: "bg-cyan-950/30",
+  },
+  recording: {
+    ring: "border-cyan-700/50",
+    text: "text-cyan-300",
+    dot: "bg-cyan-400",
+    pulse: true,
+    bg: "bg-cyan-950/30",
+  },
+  done: {
+    ring: "border-emerald-700/60",
+    text: "text-emerald-300",
+    dot: "bg-emerald-400",
+    pulse: false,
+    bg: "bg-emerald-950/30",
+  },
+  failed: {
+    ring: "border-rose-700/60",
+    text: "text-rose-300",
+    dot: "bg-rose-500",
+    pulse: false,
+    bg: "bg-rose-950/30",
+  },
+};
+
+const fallback: Tone = {
+  ring: "border-hair",
+  text: "text-ink-dim",
+  dot: "bg-ink-mute",
+  pulse: false,
+  bg: "bg-elev/40",
 };
 
 export function StatusBadge({ status }: { status: Status }) {
   const key = status ?? "pending";
-  const cls = palette[key] ?? "bg-zinc-800 text-zinc-300 border-zinc-700";
+  const tone = palette[key] ?? fallback;
   return (
     <span
-      className={`inline-block px-2 py-0.5 text-xs font-medium border rounded ${cls}`}
+      className={`inline-flex items-center gap-2 px-2.5 py-1 text-[0.65rem] font-mono uppercase tracking-[0.18em] border rounded-md ${tone.ring} ${tone.text} ${tone.bg}`}
     >
+      <span
+        className={`inline-block w-1.5 h-1.5 rounded-full ${tone.dot} ${
+          tone.pulse ? "pulse-dot" : ""
+        }`}
+        aria-hidden
+      />
       {key}
     </span>
   );

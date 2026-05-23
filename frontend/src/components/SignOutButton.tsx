@@ -18,9 +18,9 @@ export function SignOutButton() {
     <button
       type="button"
       onClick={onClick}
-      className="text-zinc-300 hover:text-emerald-400 text-sm"
+      className="text-ink-mute hover:text-accent uppercase tracking-wider transition-colors"
     >
-      Sign out
+      sign out
     </button>
   );
 }

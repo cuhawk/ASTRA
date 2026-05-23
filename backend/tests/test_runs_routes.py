@@ -113,6 +113,65 @@ async def test_get_runs_lists_only_caller(
     assert all(it["user_id"] == u1 for it in items)
 
 
+async def test_delete_run_removes_row_and_returns_204(
+    app_client: httpx.AsyncClient, db: aiosqlite.Connection, settings: Settings
+) -> None:
+    await _authed(app_client, db, settings)
+    r = await app_client.post("/runs", json={"url": "http://example.invalid/"})
+    assert r.status_code == 202, r.text
+    rid = r.json()["id"]
+
+    d = await app_client.delete(f"/runs/{rid}")
+    assert d.status_code == 204, d.text
+
+    cur = await db.execute("SELECT id FROM runs WHERE id = ?", (rid,))
+    row = await cur.fetchone()
+    await cur.close()
+    assert row is None
+
+    g = await app_client.get(f"/runs/{rid}")
+    assert g.status_code == 404
+
+
+async def test_delete_run_missing_returns_404(
+    app_client: httpx.AsyncClient, db: aiosqlite.Connection, settings: Settings
+) -> None:
+    await _authed(app_client, db, settings)
+    d = await app_client.delete("/runs/deadbeef0000")
+    assert d.status_code == 404
+
+
+async def test_delete_run_other_user_404(
+    app_client: httpx.AsyncClient, db: aiosqlite.Connection, settings: Settings
+) -> None:
+    await db.execute(
+        "INSERT INTO users (github_id, github_login, email, created_at, last_login_at) "
+        "VALUES (1, 'a', NULL, strftime('%s','now'), strftime('%s','now'))"
+    )
+    await db.commit()
+    cur = await db.execute("SELECT id FROM users WHERE github_id = 1")
+    u1 = int((await cur.fetchone())["id"])
+    await cur.close()
+
+    from backend.runs.service import create_run as _create
+
+    victim = await _create(db, user_id=u1, url="http://victim/")
+
+    await _authed(app_client, db, settings, github_id=2, login="b")
+    d = await app_client.delete(f"/runs/{victim.id}")
+    assert d.status_code == 404
+
+    cur = await db.execute("SELECT id FROM runs WHERE id = ?", (victim.id,))
+    row = await cur.fetchone()
+    await cur.close()
+    assert row is not None
+
+
+async def test_delete_run_unauthed_401(app_client: httpx.AsyncClient) -> None:
+    d = await app_client.delete("/runs/anything")
+    assert d.status_code == 401
+
+
 async def test_get_run_other_user_404(
     app_client: httpx.AsyncClient, db: aiosqlite.Connection, settings: Settings
 ) -> None:

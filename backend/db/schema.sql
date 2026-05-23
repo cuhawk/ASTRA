@@ -103,3 +103,39 @@ CREATE TABLE IF NOT EXISTS features (
 );
 
 CREATE INDEX IF NOT EXISTS idx_features_run ON features(run_id);
+
+-- Persistent audit log of user-facing actions: runs created/deleted, features
+-- recorded, auth logins, LLM calls (the row pointer here, transcripts live in
+-- audit_llm_calls). Visible to the owning user; not cross-user.
+-- Retention: 7 days, swept lazily on each insert (see backend.audit.events).
+CREATE TABLE IF NOT EXISTS audit_events (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action       TEXT    NOT NULL,
+    entity       TEXT    NOT NULL,
+    entity_id    TEXT,
+    payload      TEXT,
+    at           INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_events_user_at ON audit_events(user_id, at);
+CREATE INDEX IF NOT EXISTS idx_audit_events_at ON audit_events(at);
+
+-- LLM transcript columns live on audit_llm_calls. SQLite has no
+-- ADD COLUMN IF NOT EXISTS, so the migration runs in Python — see
+-- backend.db.connection.init_db.
+
+-- Per-run chat thread. One conversation per (user, run); ordering by id.
+-- llm_call_id ties an assistant message to its audit row (transcript +
+-- token usage live there). System-context messages are NOT persisted —
+-- they're rebuilt per turn from the run's graph.
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id        TEXT    NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    role          TEXT    NOT NULL CHECK (role IN ('user', 'assistant')),
+    content       TEXT    NOT NULL,
+    llm_call_id   INTEGER REFERENCES audit_llm_calls(id) ON DELETE SET NULL,
+    created_at    INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_run ON chat_messages(run_id, id);

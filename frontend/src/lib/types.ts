@@ -47,6 +47,31 @@ export interface CompletionOut {
   duration_ms: number;
 }
 
+export interface VaultStatus {
+  provider: string;
+  present: boolean;
+  updated_at: number | null;
+}
+
+export interface ChatMessage {
+  id: number;
+  run_id: string;
+  role: "user" | "assistant";
+  content: string;
+  llm_call_id: number | null;
+  created_at: number;
+}
+
+export interface ActivityEvent {
+  id: number;
+  user_id: number;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  payload: Record<string, unknown> | null;
+  at: number;
+}
+
 export interface RecordAction {
   type: "click" | "wait" | "fill" | "navigate" | "press";
   selector?: string;
