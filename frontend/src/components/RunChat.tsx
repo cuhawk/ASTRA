@@ -89,7 +89,7 @@ export function RunChat({ runId }: Props) {
       <div className="rounded-lg bg-panel/60 card-inset flex flex-col h-[60vh] min-h-[480px] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-hair/40 shrink-0">
           <span className="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-ink-mute">
-            chat · gemini flash
+            chat · gemini flash lite
           </span>
           <span className="font-mono text-[0.62rem] tabular-nums text-ink-mute">
             {messages.length} msg
@@ -149,7 +149,7 @@ export function RunChat({ runId }: Props) {
           context
         </span>
         <p className="text-ink-dim text-xs leading-relaxed">
-          Gemini Flash is grounded in this run only — it sees the function
+          Gemini Flash Lite is grounded in this run only — it sees the function
           count, edges, and a small sample of top functions. Cross-run answers
           are out of scope.
         </p>

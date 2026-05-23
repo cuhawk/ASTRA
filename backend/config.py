@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     free_tier_daily_limit: int = 100
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.1-flash-lite"
     gemini_embed_model: str = "text-embedding-004"
 
     anthropic_default_model: str = "claude-sonnet-4-5-20250929"

@@ -45,7 +45,7 @@ class KillSwitchTripped(Exception):
 # not call provider APIs to retrieve pricing.
 PRICING: dict[tuple[Provider, str], tuple[float, float]] = {
     # provider, model -> (prompt_$/MT, completion_$/MT)
-    ("gemini", "gemini-2.5-flash"): (0.30, 2.50),
+    ("gemini", "gemini-3.1-flash-lite"): (0.10, 0.40),
     ("gemini", "gemini-2.5-pro"): (1.25, 10.00),
     ("gemini", "text-embedding-004"): (0.025, 0.0),
     ("anthropic", "claude-sonnet-4-5-20250929"): (3.00, 15.00),
@@ -68,4 +68,4 @@ def cost_for(provider: Provider, model: str, usage: LLMUsage) -> float:
         uncached * p_rate
         + cached * p_rate * cache_rate_factor
         + usage.completion_tokens * c_rate
-    ) / 1_000_000
+    ) / 1_000_000 or (0.000001 if (usage.prompt_tokens + usage.completion_tokens) > 0 else 0.0)

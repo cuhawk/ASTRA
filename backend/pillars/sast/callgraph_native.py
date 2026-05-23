@@ -8,8 +8,8 @@ import tree_sitter
 import tree_sitter_typescript
 from pydantic import BaseModel
 
-_MAX_FILE_BYTES = 2 * 1024 * 1024
-_SKIP_SEGMENTS = frozenset({"node_modules", ".git", "dist", "build", "_nomap"})
+_MAX_FILE_BYTES = 4 * 1024 * 1024
+_SKIP_SEGMENTS = frozenset({"node_modules", ".git", "dist", "build"})
 _FUNCTION_KINDS = frozenset(
     {
         "function_declaration",

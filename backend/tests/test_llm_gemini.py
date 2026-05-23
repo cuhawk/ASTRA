@@ -8,7 +8,7 @@ from backend.llm.base import LLMError
 from backend.llm.gemini import GeminiClient
 
 BASE_URL = "https://generativelanguage.googleapis.com"
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.1-flash-lite"
 EMBED_MODEL = "text-embedding-004"
 API_KEY = "test-gemini-key"
 

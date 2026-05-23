@@ -192,3 +192,38 @@ async def test_get_run_other_user_404(
     await _authed(app_client, db, settings, github_id=2, login="b")
     r = await app_client.get(f"/runs/{other_run.id}")
     assert r.status_code == 404
+
+
+async def test_list_run_files_and_content(
+    app_client: httpx.AsyncClient, db: aiosqlite.Connection, settings: Settings
+) -> None:
+    from pathlib import Path
+    user_id = await _authed(app_client, db, settings)
+    
+    from backend.runs.service import create_run as _create
+    run = await _create(db, user_id=user_id, url="http://example.invalid/")
+    
+    from backend.pillars.memory.runs import RunLayout
+    layout = RunLayout(
+        root=Path(settings.runs_root).resolve(),
+        user_id=f"u{user_id}",
+        run_id=run.id,
+    )
+    layout.create()
+    
+    src_file = layout.sourcemap_dir / "src" / "App.tsx"
+    src_file.parent.mkdir(parents=True, exist_ok=True)
+    src_file.write_text("console.log('hello world');", encoding="utf-8")
+    
+    r = await app_client.get(f"/runs/{run.id}/files")
+    assert r.status_code == 200, r.text
+    files = r.json()
+    assert "src/App.tsx" in files
+    
+    r = await app_client.get(f"/runs/{run.id}/files/content", params={"path": "src/App.tsx"})
+    assert r.status_code == 200, r.text
+    assert r.json()["content"] == "console.log('hello world');"
+    
+    r = await app_client.get(f"/runs/{run.id}/files/content", params={"path": "../../../etc/passwd"})
+    assert r.status_code == 400
+

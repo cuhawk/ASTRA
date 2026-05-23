@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 
-const geist = Geist({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-geist",
+  variable: "--font-inter",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
 });
 
 const jetbrains = JetBrains_Mono({
@@ -27,12 +33,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geist.variable} ${jetbrains.variable}`}
+      className={`dark ${inter.variable} ${outfit.variable}`}
     >
       <body className="bg-void text-ink min-h-screen antialiased">
+        {/* removed full-screen background */}
         <div className="fixed inset-0 -z-10 bg-grid pointer-events-none" />
         <Sidebar />
-        <main className="md:pl-60">{children}</main>
+        <main className="min-h-screen">
+          {children}
+        </main>
       </body>
     </html>
   );

@@ -92,3 +92,74 @@ async def delete_run_endpoint(
         # Filesystem cleanup is best-effort; SQLite row is the source of truth.
         pass
     return Response(status_code=204)
+
+
+@router.get("/runs/{run_id}/files", response_model=list[str])
+async def list_run_files_endpoint(
+    run_id: str,
+    request: Request,
+    user=Depends(require_user),
+    db=Depends(get_db),
+) -> list[str]:
+    rec = await get_run(db, run_id, user_id=user["id"])
+    if rec is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    
+    settings = request.app.state.settings
+    layout = RunLayout(
+        root=Path(settings.runs_root).resolve(),
+        user_id=f"u{user['id']}",
+        run_id=run_id,
+    )
+    if not layout.sourcemap_dir.is_dir():
+        return []
+    
+    exts = (".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx")
+    skip_segments = {"node_modules", ".git", "dist", "build", "_nomap"}
+    files = []
+    for path in sorted(layout.sourcemap_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        if path.suffix not in exts:
+            continue
+        rel_parts = path.relative_to(layout.sourcemap_dir).parts
+        if any(p in skip_segments for p in rel_parts):
+            continue
+        files.append(path.relative_to(layout.sourcemap_dir).as_posix())
+    return files
+
+
+@router.get("/runs/{run_id}/files/content", response_model=dict[str, str])
+async def get_run_file_content_endpoint(
+    run_id: str,
+    path: str,
+    request: Request,
+    user=Depends(require_user),
+    db=Depends(get_db),
+) -> dict[str, str]:
+    rec = await get_run(db, run_id, user_id=user["id"])
+    if rec is None:
+        raise HTTPException(status_code=404, detail="run not found")
+        
+    settings = request.app.state.settings
+    layout = RunLayout(
+        root=Path(settings.runs_root).resolve(),
+        user_id=f"u{user['id']}",
+        run_id=run_id,
+    )
+    
+    try:
+        resolved_root = layout.sourcemap_dir.resolve()
+        requested_path = (resolved_root / path).resolve()
+        if not requested_path.is_relative_to(resolved_root):
+            raise HTTPException(status_code=400, detail="invalid path")
+        if not requested_path.is_file():
+            raise HTTPException(status_code=404, detail="file not found")
+        
+        content = requested_path.read_text(encoding="utf-8", errors="replace")
+        return {"content": content}
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+

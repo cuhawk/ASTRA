@@ -4,12 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { StatusBadge } from "@/components/StatusBadge";
 import { GraphViewer } from "@/components/GraphViewer";
-import { QueryBar } from "@/components/QueryBar";
-import { RunChat } from "@/components/RunChat";
-import { DeleteRunButton } from "@/components/DeleteRunButton";
-import { humanizeAge } from "@/lib/format";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { Run } from "@/lib/types";
 
 const TERMINAL: Run["status"][] = ["done", "failed"];
@@ -48,9 +44,12 @@ export default function RunDetailPage() {
 
   if (error) {
     return (
-      <div className="max-w-[1200px] mx-auto px-6 py-10">
-        <div className="rounded-lg border border-rose-700/60 bg-rose-950/30 p-6 text-rose-300 font-mono text-sm whitespace-pre-wrap">
-          {error}
+      <div className="h-screen flex flex-col">
+        <RunBar runId={id} />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-xl w-full rounded-lg border border-rose-700/50 bg-rose-950/20 p-5 text-rose-300 font-mono text-sm whitespace-pre-wrap">
+            {error}
+          </div>
         </div>
       </div>
     );
@@ -58,9 +57,12 @@ export default function RunDetailPage() {
 
   if (!run) {
     return (
-      <div className="max-w-[1200px] mx-auto px-6 py-10 flex items-center gap-3 text-ink-mute font-mono text-sm">
-        <span className="inline-block w-3 h-3 border-2 border-accent border-t-transparent rounded-full orbit" />
-        loading run…
+      <div className="h-screen flex flex-col">
+        <RunBar runId={id} />
+        <div className="flex-1 flex items-center justify-center gap-3 text-ink-mute font-mono text-sm">
+          <span className="inline-block w-3 h-3 border-2 border-accent border-t-transparent rounded-full orbit" />
+          loading run…
+        </div>
       </div>
     );
   }
@@ -68,137 +70,77 @@ export default function RunDetailPage() {
   const inProgress = !TERMINAL.includes(run.status);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-10 flex flex-col gap-8 reveal">
-      <header className="flex flex-col gap-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex flex-col gap-2 min-w-0 flex-1">
-            <Link
-              href="/runs"
-              className="font-mono text-[0.65rem] uppercase tracking-[0.22em] text-ink-mute hover:text-accent w-fit"
-            >
-              ← all runs
-            </Link>
-            <h1 className="flex items-center gap-3 flex-wrap">
-              <span className="font-mono text-2xl md:text-3xl text-accent tracking-tight break-all">
-                {run.id}
-              </span>
-              <StatusBadge status={run.status} />
-            </h1>
-            <div className="font-mono text-xs text-ink-mute flex items-center gap-3 flex-wrap">
-              <span>created {humanizeAge(run.created_at)}</span>
-              {run.finished_at ? (
-                <>
-                  <span className="text-hair-bright">·</span>
-                  <span>finished {humanizeAge(run.finished_at)}</span>
-                </>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {run.status === "done" ? (
-              <Link
-                href={`/runs/${run.id}/features`}
-                className="inline-flex items-center gap-2 border border-hair bg-elev/40 hover:border-accent/60 hover:text-accent px-4 py-2 rounded-md font-mono text-xs uppercase tracking-wider text-ink-dim transition"
-              >
-                features <span aria-hidden>→</span>
-              </Link>
-            ) : null}
-            <DeleteRunButton
-              runId={run.id}
-              variant="header"
-              redirectTo="/runs"
-            />
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-panel/60 card-inset p-5">
-          <div className="font-mono text-[0.6rem] uppercase tracking-[0.24em] text-ink-mute mb-2">
-            target
-          </div>
-          <div className="font-mono text-sm text-ink-dim break-all">
-            {run.url ?? "—"}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <Metric label="files" value={run.files} />
-          <Metric label="functions" value={run.functions} />
-          <Metric label="edges" value={run.edges} />
-        </div>
-      </header>
+    <div className="h-screen flex flex-col min-h-0">
+      <RunBar runId={run.id} status={run.status} url={run.url} files={run.files} functions={run.functions} edges={run.edges} />
 
       {inProgress ? (
-        <div className="rounded-lg bg-panel/60 card-inset px-5 py-4 flex items-center gap-3 text-ink-dim font-mono text-sm">
+        <div className="flex-1 flex items-center justify-center gap-3 text-ink-dim font-mono text-sm">
           <span className="inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full orbit" />
-          <span>
-            pipeline <span className="text-amber-300">{run.status}</span> · polling
-            every 2s
-          </span>
+          pipeline <span className="text-amber-300">{run.status}</span> · polling every 2s
         </div>
-      ) : null}
-
-      {run.status === "failed" && run.error ? (
-        <div className="rounded-lg border border-rose-700/60 bg-rose-950/30">
-          <div className="px-5 py-3 border-b border-rose-700/40 font-mono text-xs uppercase tracking-[0.18em] text-rose-300">
-            pipeline failed
+      ) : run.status === "failed" && run.error ? (
+        <div className="flex-1 overflow-auto p-4">
+          <div className="rounded-lg border border-rose-700/50 bg-rose-950/20">
+            <div className="px-4 py-2.5 border-b border-rose-700/30 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-rose-300">pipeline failed</div>
+            <pre className="px-4 py-3 font-mono text-xs text-rose-200 whitespace-pre-wrap break-words">{run.error}</pre>
           </div>
-          <pre className="px-5 py-4 font-mono text-xs text-rose-200 whitespace-pre-wrap break-words max-h-80 overflow-auto">
-            {run.error}
-          </pre>
         </div>
-      ) : null}
-
-      {run.status === "done" ? (
-        <>
-          <section className="flex flex-col gap-3">
-            <SectionTitle eyebrow="visualization" title="callgraph" />
-            <GraphViewer runId={run.id} />
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <SectionTitle eyebrow="interrogate" title="query" />
-            <QueryBar runId={run.id} />
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <SectionTitle eyebrow="conversation" title="chat" />
-            <RunChat runId={run.id} />
-          </section>
-        </>
-      ) : null}
+      ) : (
+        <div className="flex-1 min-h-0">
+          <GraphViewer runId={run.id} />
+        </div>
+      )}
     </div>
   );
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg bg-panel/50 card-inset p-5 flex flex-col gap-1.5">
-      <span className="font-mono text-[0.6rem] uppercase tracking-[0.24em] text-ink-mute">
-        {label}
-      </span>
-      <span className="font-mono text-3xl text-ink tabular-nums tracking-tight">
-        {value.toLocaleString()}
-      </span>
-    </div>
-  );
-}
-
-function SectionTitle({
-  eyebrow,
-  title,
+function RunBar({
+  runId,
+  status,
+  url,
+  files,
+  functions,
+  edges,
 }: {
-  eyebrow: string;
-  title: string;
+  runId: string;
+  status?: string;
+  url?: string | null;
+  files?: number;
+  functions?: number;
+  edges?: number;
 }) {
   return (
-    <div className="flex items-baseline gap-3">
-      <span className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-ink-mute">
-        {eyebrow}
-      </span>
-      <span className="h-px flex-1 bg-gradient-to-r from-hair via-hair/50 to-transparent" />
-      <span className="font-mono text-sm uppercase tracking-[0.18em] text-ink-dim">
-        {title}
-      </span>
+    <div className="flex items-center gap-3 pl-12 md:pl-4 pr-4 py-2 border-b border-hair/40 bg-panel shrink-0 overflow-x-auto">
+      <Link href="/runs" className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-ink-mute hover:text-accent shrink-0">
+        ← runs
+      </Link>
+      <span className="w-px h-4 bg-hair/40" />
+      <span className="font-mono text-[0.72rem] text-accent shrink-0">{runId.slice(0, 12)}</span>
+      {status ? (
+        <>
+          <span className="w-px h-4 bg-hair/40" />
+          <StatusBadge status={status} />
+        </>
+      ) : null}
+      {url ? (
+        <>
+          <span className="w-px h-4 bg-hair/40" />
+          <span className="font-mono text-[0.68rem] text-ink-mute truncate max-w-xs" title={url}>{url}</span>
+        </>
+      ) : null}
+      <div className="ml-auto flex items-center gap-3 shrink-0">
+        {files !== undefined ? <Chip label="files" value={files} /> : null}
+        {functions !== undefined ? <Chip label="funcs" value={functions} /> : null}
+        {edges !== undefined ? <Chip label="edges" value={edges} /> : null}
+      </div>
     </div>
+  );
+}
+
+function Chip({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-ink-mute">
+      {label} <span className="text-ink-dim tabular-nums">{value.toLocaleString()}</span>
+    </span>
   );
 }

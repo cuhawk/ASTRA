@@ -50,7 +50,7 @@ async def _seed_run(db: aiosqlite.Connection, user_id: int, run_id: str = "abc12
 def _fake_response(text: str = "ok!") -> LLMResponse:
     return LLMResponse(
         provider="gemini",
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite",
         text=text,
         usage=LLMUsage(prompt_tokens=10, completion_tokens=4),
         cost_usd=0.0001,
@@ -219,7 +219,7 @@ async def test_chat_audit_persists_cached_token_count(
     rid = await _seed_run(db, uid, "r_cached")
     cached_resp = LLMResponse(
         provider="gemini",
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite",
         text="hit",
         usage=LLMUsage(
             prompt_tokens=1200, completion_tokens=15, cached_prompt_tokens=900
