@@ -1,6 +1,8 @@
 # ===== ASTRA-specific =====
 # Per-run user data: raw JS, sourcemaps, Kuzu DB, LanceDB, coverage snapshots, advisor transcripts.
-runs/
+/runs/
+# graphify knowledge-graph output (regenerated locally, not source of truth)
+/graphify-out/
 # Session-local memory scratchpad (not source of truth)
 memory.md
 
