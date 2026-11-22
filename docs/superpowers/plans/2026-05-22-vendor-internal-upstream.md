@@ -1,15 +1,17 @@
-# Session 1 — `chore/vendor-tlxkull` Implementation Plan
+# Session 1 — `chore/vendor-internal-upstream` Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Vendor four tlxkull modules (`tlx/modules/js_analyzer/`, `tlx/modules/rag/`, `tlx/mcp_server/`, `tlx/prompts/`) into the ASTRA tree, with per-file provenance headers, and record SHAs in `VENDORED.md`.
+Replace `<private-upstream-repo>` and `<pinned-sha>` with the authorized upstream URL and commit before running these commands.
 
-**Architecture:** Shallow-clone upstream tlxkull once into a scratch dir at a pinned SHA. Copy (do not `git subtree`) each module into its ASTRA target. Prepend a provenance header to every vendored source file via a single deterministic stamper script. Commit one module per commit on a feature branch. Update `VENDORED.md` table in a final commit.
+**Goal:** Vendor four `<private-upstream-repo>` modules (`tlx/modules/js_analyzer/`, `tlx/modules/rag/`, `tlx/mcp_server/`, `tlx/prompts/`) into the ASTRA tree, with per-file provenance headers, and record SHAs in `VENDORED.md`.
+
+**Architecture:** Shallow-clone upstream `<private-upstream-repo>` once into a scratch dir at a pinned SHA. Copy (do not `git subtree`) each module into its ASTRA target. Prepend a provenance header to every vendored source file via a single deterministic stamper script. Commit one module per commit on a feature branch. Update `VENDORED.md` table in a final commit.
 
 **Tech Stack:** git, Python 3 (system, for stamper script — no project deps needed), shell.
 
 **Pre-flight:**
-- `git ls-remote https://github.com/cuhawk/tlxkull HEAD` returns SHA `83cae232b94e7998ef543c72e8e7302617d438a0` (pinned in this plan).
+- `git ls-remote '<private-upstream-repo>' HEAD` returns SHA `<pinned-sha>` (pinned in this plan).
 - Upstream has no `LICENSE` file at root → record as `proprietary — see upstream repo` in `VENDORED.md`.
 - Module paths confirmed: `tlx/modules/js_analyzer`, `tlx/modules/rag`, `tlx/mcp_server`, `tlx/prompts`.
 
@@ -35,14 +37,14 @@ ASTRA/
 │   ├── mcp/                                         # ← tlx/mcp_server/
 │   └── prompts/                                     # ← tlx/prompts/
 ├── VENDORED.md                                      # table updated with 4 rows
-└── docs/superpowers/plans/2026-05-22-vendor-tlxkull.md
+└── docs/superpowers/plans/2026-05-22-vendor-internal-upstream.md
 ```
 
 Existing `.gitkeep` files inside `backend/pillars/{sast,memory}/` and `backend/mcp/` are removed when each dir is populated (real content makes them redundant).
 
 Pinned upstream SHA constant (used in every commit, header, VENDORED.md row):
 ```
-83cae232b94e7998ef543c72e8e7302617d438a0
+<pinned-sha>
 ```
 
 ---
@@ -54,39 +56,39 @@ Pinned upstream SHA constant (used in every commit, header, VENDORED.md row):
 - [ ] **Step 1: Branch from `main`**
 
 ```bash
-cd /Users/soural/Documents/ASTRA
-git checkout -b chore/vendor-tlxkull
+cd /path/to/ASTRA
+git checkout -b chore/vendor-internal-upstream
 git symbolic-ref --short HEAD
 ```
 
-Expected: `chore/vendor-tlxkull`.
+Expected: `chore/vendor-internal-upstream`.
 
 ---
 
-## Task 2: Clone tlxkull to scratch at pinned SHA
+## Task 2: Clone `<private-upstream-repo>` to scratch at pinned SHA
 
-**Files:** none in repo; scratch lives at `/tmp/tlxkull-vendor/`
+**Files:** none in repo; scratch lives at `/tmp/internal-upstream-vendor/`
 
 - [ ] **Step 1: Clean any prior scratch + clone at pinned SHA**
 
 ```bash
-rm -rf /tmp/tlxkull-vendor
-git clone --depth 1 https://github.com/cuhawk/tlxkull /tmp/tlxkull-vendor
-cd /tmp/tlxkull-vendor
-git fetch --depth 1 origin 83cae232b94e7998ef543c72e8e7302617d438a0
-git checkout 83cae232b94e7998ef543c72e8e7302617d438a0
+rm -rf /tmp/internal-upstream-vendor
+git clone --depth 1 '<private-upstream-repo>' /tmp/internal-upstream-vendor
+cd /tmp/internal-upstream-vendor
+git fetch --depth 1 origin '<pinned-sha>'
+git checkout '<pinned-sha>'
 git rev-parse HEAD
 ```
 
-Expected last line: `83cae232b94e7998ef543c72e8e7302617d438a0`.
+Expected last line: `<pinned-sha>`.
 
 - [ ] **Step 2: Confirm module paths exist**
 
 ```bash
-ls -d /tmp/tlxkull-vendor/tlx/modules/js_analyzer \
-      /tmp/tlxkull-vendor/tlx/modules/rag \
-      /tmp/tlxkull-vendor/tlx/mcp_server \
-      /tmp/tlxkull-vendor/tlx/prompts
+ls -d /tmp/internal-upstream-vendor/tlx/modules/js_analyzer \
+      /tmp/internal-upstream-vendor/tlx/modules/rag \
+      /tmp/internal-upstream-vendor/tlx/mcp_server \
+      /tmp/internal-upstream-vendor/tlx/prompts
 ```
 
 Expected: all four paths print, none error.
@@ -109,7 +111,7 @@ Usage:
     python3 tools/vendor_stamp.py \\
         --target backend/pillars/sast \\
         --upstream-path tlx/modules/js_analyzer \\
-        --sha 83cae232b94e7998ef543c72e8e7302617d438a0 \\
+        --sha '<pinned-sha>' \\
         --imported-on 2026-05-22
 
 Idempotent: skips files that already carry a `vendored-from:` marker.
@@ -123,7 +125,7 @@ import sys
 from pathlib import Path
 
 STAMPED_MARKER = "vendored-from:"
-UPSTREAM_URL = "https://github.com/cuhawk/tlxkull"
+UPSTREAM_URL = "<private-upstream-repo>"
 
 EXT_COMMENT = {
     ".py": "#",
@@ -252,7 +254,7 @@ mkdir -p /tmp/stamp-smoke && echo "print('hi')" > /tmp/stamp-smoke/x.py
 python3 tools/vendor_stamp.py \
   --target /tmp/stamp-smoke \
   --upstream-path tlx/dummy \
-  --sha 83cae232b94e7998ef543c72e8e7302617d438a0 \
+  --sha '<pinned-sha>' \
   --imported-on 2026-05-22
 head -8 /tmp/stamp-smoke/x.py
 rm -rf /tmp/stamp-smoke
@@ -272,7 +274,7 @@ git commit -m "chore(tools): add vendor_stamp.py provenance header injector"
 ## Task 4 [PARALLEL via subagents]: Vendor four modules into target dirs
 
 Dispatch four `general-purpose` subagents **in one message** (multiple Agent tool-use blocks). Each:
-1. Copies its assigned module from `/tmp/tlxkull-vendor/<src>` to its ASTRA target.
+1. Copies its assigned module from `/tmp/internal-upstream-vendor/<src>` to its ASTRA target.
 2. Removes the placeholder `.gitkeep` (if present) inside the target.
 3. Runs `tools/vendor_stamp.py` on the target.
 4. Reports `stamped N files` count back.
@@ -283,19 +285,19 @@ Dispatch four `general-purpose` subagents **in one message** (multiple Agent too
 
 Prompt skeleton:
 ```
-Vendor a tlxkull module into the ASTRA tree.
+Vendor a `<private-upstream-repo>` module into the ASTRA tree.
 
-Source: /tmp/tlxkull-vendor/tlx/modules/js_analyzer/
-Target: /Users/soural/Documents/ASTRA/backend/pillars/sast/
+Source: /tmp/internal-upstream-vendor/tlx/modules/js_analyzer/
+Target: /path/to/ASTRA/backend/pillars/sast/
 
 Steps:
-1. rm -f /Users/soural/Documents/ASTRA/backend/pillars/sast/.gitkeep
-2. cp -R /tmp/tlxkull-vendor/tlx/modules/js_analyzer/. /Users/soural/Documents/ASTRA/backend/pillars/sast/
+1. rm -f /path/to/ASTRA/backend/pillars/sast/.gitkeep
+2. cp -R /tmp/internal-upstream-vendor/tlx/modules/js_analyzer/. /path/to/ASTRA/backend/pillars/sast/
 3. find target — DO NOT copy __pycache__, .pyc files (rm -rf any that appear)
-4. cd /Users/soural/Documents/ASTRA && python3 tools/vendor_stamp.py \
+4. cd /path/to/ASTRA && python3 tools/vendor_stamp.py \
      --target backend/pillars/sast \
      --upstream-path tlx/modules/js_analyzer \
-     --sha 83cae232b94e7998ef543c72e8e7302617d438a0 \
+     --sha '<pinned-sha>' \
      --imported-on 2026-05-22
 5. Report: file count in target, stamped count, any errors.
 
@@ -306,22 +308,22 @@ Report in under 100 words.
 ### Subagent B — rag → backend/pillars/memory
 
 Same prompt with substitutions:
-- Source: `/tmp/tlxkull-vendor/tlx/modules/rag/`
-- Target: `/Users/soural/Documents/ASTRA/backend/pillars/memory/`
+- Source: `/tmp/internal-upstream-vendor/tlx/modules/rag/`
+- Target: `/path/to/ASTRA/backend/pillars/memory/`
 - `--upstream-path tlx/modules/rag`
 
 ### Subagent C — mcp_server → backend/mcp
 
 Same prompt:
-- Source: `/tmp/tlxkull-vendor/tlx/mcp_server/`
-- Target: `/Users/soural/Documents/ASTRA/backend/mcp/`
+- Source: `/tmp/internal-upstream-vendor/tlx/mcp_server/`
+- Target: `/path/to/ASTRA/backend/mcp/`
 - `--upstream-path tlx/mcp_server`
 
 ### Subagent D — prompts → backend/prompts
 
 Same prompt:
-- Source: `/tmp/tlxkull-vendor/tlx/prompts/`
-- Target: `/Users/soural/Documents/ASTRA/backend/prompts/`
+- Source: `/tmp/internal-upstream-vendor/tlx/prompts/`
+- Target: `/path/to/ASTRA/backend/prompts/`
 - `--upstream-path tlx/prompts`
 - Note: `backend/prompts/` does not pre-exist; subagent creates it. No `.gitkeep` to remove.
 
@@ -340,7 +342,7 @@ for d in backend/pillars/sast backend/pillars/memory backend/mcp backend/prompts
 done
 ```
 
-Expected: each file's first lines contain `vendored-from:`, `upstream-sha: 83cae...`, `imported-on: 2026-05-22`.
+Expected: each file's first lines contain `vendored-from:`, `upstream-sha: <pinned-sha>`, `imported-on: 2026-05-22`.
 
 ---
 
@@ -352,10 +354,10 @@ Four atomic commits, in this order. Each commit references the same upstream SHA
 
 ```bash
 git add backend/pillars/sast
-git commit -m "vendor(sast): import tlxkull tlx/modules/js_analyzer @ 83cae23
+git commit -m "vendor(sast): import <private-upstream-repo> tlx/modules/js_analyzer @ <pinned-sha>
 
-Source: https://github.com/cuhawk/tlxkull
-Upstream SHA: 83cae232b94e7998ef543c72e8e7302617d438a0
+Source: <private-upstream-repo>
+Upstream SHA: <pinned-sha>
 Imported: 2026-05-22"
 ```
 
@@ -363,10 +365,10 @@ Imported: 2026-05-22"
 
 ```bash
 git add backend/pillars/memory
-git commit -m "vendor(memory): import tlxkull tlx/modules/rag @ 83cae23
+git commit -m "vendor(memory): import <private-upstream-repo> tlx/modules/rag @ <pinned-sha>
 
-Source: https://github.com/cuhawk/tlxkull
-Upstream SHA: 83cae232b94e7998ef543c72e8e7302617d438a0
+Source: <private-upstream-repo>
+Upstream SHA: <pinned-sha>
 Imported: 2026-05-22"
 ```
 
@@ -374,10 +376,10 @@ Imported: 2026-05-22"
 
 ```bash
 git add backend/mcp
-git commit -m "vendor(mcp): import tlxkull tlx/mcp_server @ 83cae23
+git commit -m "vendor(mcp): import <private-upstream-repo> tlx/mcp_server @ <pinned-sha>
 
-Source: https://github.com/cuhawk/tlxkull
-Upstream SHA: 83cae232b94e7998ef543c72e8e7302617d438a0
+Source: <private-upstream-repo>
+Upstream SHA: <pinned-sha>
 Imported: 2026-05-22"
 ```
 
@@ -385,10 +387,10 @@ Imported: 2026-05-22"
 
 ```bash
 git add backend/prompts
-git commit -m "vendor(prompts): import tlxkull tlx/prompts @ 83cae23
+git commit -m "vendor(prompts): import <private-upstream-repo> tlx/prompts @ <pinned-sha>
 
-Source: https://github.com/cuhawk/tlxkull
-Upstream SHA: 83cae232b94e7998ef543c72e8e7302617d438a0
+Source: <private-upstream-repo>
+Upstream SHA: <pinned-sha>
 Imported: 2026-05-22"
 ```
 
@@ -407,10 +409,10 @@ Edit `VENDORED.md`. Replace this row:
 With:
 
 ```
-| backend/pillars/sast              | tlx/modules/js_analyzer             | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22        | copy + stamp | full module |
-| backend/pillars/memory            | tlx/modules/rag                     | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22        | copy + stamp | swap ChromaDB → LanceDB pending (Session 2) |
-| backend/mcp                       | tlx/mcp_server                      | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22        | copy + stamp | full module |
-| backend/prompts                   | tlx/prompts                         | 83cae232b94e7998ef543c72e8e7302617d438a0 | 2026-05-22        | copy + stamp | generalize allowlist pending |
+| backend/pillars/sast              | tlx/modules/js_analyzer             | <pinned-sha> | 2026-05-22        | copy + stamp | full module |
+| backend/pillars/memory            | tlx/modules/rag                     | <pinned-sha> | 2026-05-22        | copy + stamp | swap ChromaDB → LanceDB pending (Session 2) |
+| backend/mcp                       | tlx/mcp_server                      | <pinned-sha> | 2026-05-22        | copy + stamp | full module |
+| backend/prompts                   | tlx/prompts                         | <pinned-sha> | 2026-05-22        | copy + stamp | generalize allowlist pending |
 ```
 
 Also update the **Source repositories** table — change `(record on first import)` to `proprietary — no LICENSE in upstream root`.
@@ -419,7 +421,7 @@ Also update the **Source repositories** table — change `(record on first impor
 
 ```bash
 git add VENDORED.md
-git commit -m "docs(vendored): record tlxkull provenance for 4 modules @ 83cae23"
+git commit -m "docs(vendored): record <private-upstream-repo> provenance for 4 modules @ <pinned-sha>"
 ```
 
 ---
@@ -429,14 +431,14 @@ git commit -m "docs(vendored): record tlxkull provenance for 4 modules @ 83cae23
 - [ ] **Step 1: Commit this plan**
 
 ```bash
-git add docs/superpowers/plans/2026-05-22-vendor-tlxkull.md
-git commit -m "docs: add Session 1 vendor-tlxkull plan"
+git add docs/superpowers/plans/2026-05-22-vendor-internal-upstream.md
+git commit -m "docs: add Session 1 vendor-<private-upstream-repo> plan"
 ```
 
 - [ ] **Step 2: Remove scratch clone**
 
 ```bash
-rm -rf /tmp/tlxkull-vendor
+rm -rf /tmp/internal-upstream-vendor
 ```
 
 ---
@@ -449,7 +451,7 @@ rm -rf /tmp/tlxkull-vendor
 git status && git symbolic-ref --short HEAD
 ```
 
-Expected: `nothing to commit, working tree clean` and `chore/vendor-tlxkull`.
+Expected: `nothing to commit, working tree clean` and `chore/vendor-internal-upstream`.
 
 - [ ] **V2: Four pillars populated, no leftover `.gitkeep`**
 
@@ -481,7 +483,7 @@ Expected: `missing=0`.
 - [ ] **V4: `VENDORED.md` records 4 rows w/ correct SHA**
 
 ```bash
-grep -c "83cae232b94e7998ef543c72e8e7302617d438a0" VENDORED.md
+grep -c "<pinned-sha>" VENDORED.md
 ```
 
 Expected: `4` (or more if also in header convention example).

@@ -1,4 +1,4 @@
-# ported-from: https://github.com/cuhawk/tlxkull
+# ported-from: internal-upstream
 # upstream-path: bin/explode_sourcemap.py
 # upstream-sha:  83cae232b94e7998ef543c72e8e7302617d438a0
 # imported-on:   2026-05-22

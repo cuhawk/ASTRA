@@ -24,7 +24,7 @@ What it is **not**:
 
 Substantial portions of the analysis core already exist (private) at:
 
-**https://github.com/cuhawk/tlxkull**
+**internal-upstream**
 
 Do **not** re-implement what is already there. Before scoping new work, read:
 
@@ -151,7 +151,7 @@ Per-run isolation: dedicated Kuzu + LanceDB files per run, namespaced by user. S
 
 ## 6. What to vendor vs rebuild
 
-| ASTRA component                | tlxkull source                                  | Action  |
+| ASTRA component                | internal-upstream source                                  | Action  |
 |--------------------------------|-------------------------------------------------|---------|
 | JS callgraph + taint           | `tlx/modules/js_analyzer/`                      | vendor  |
 | RAG ingest + per-repo store    | `tlx/modules/rag/`                              | vendor; swap ChromaDB → LanceDB |
@@ -162,12 +162,12 @@ Per-run isolation: dedicated Kuzu + LanceDB files per run, namespaced by user. S
 | Caido MCP wrapper              | `bin/caido-mcp.py`                              | vendor for post-MVP bridge |
 
 Rebuild from scratch:
-- **Kuzu writer.** tlxkull stores SQLite per target; ASTRA needs an embedded graph DB.
+- **Kuzu writer.** internal-upstream stores SQLite per target; ASTRA needs an embedded graph DB.
 - **Coverage capture + join.** chrome-devtools `Profiler.takePreciseCoverage`, labeled per feature run.
-- **Web UI.** tlxkull is a TUI on Claude Code; ASTRA needs a browser frontend.
-- **Auth + multi-tenant isolation + key vault.** tlxkull is single-operator.
+- **Web UI.** internal-upstream is a TUI on Claude Code; ASTRA needs a browser frontend.
+- **Auth + multi-tenant isolation + key vault.** internal-upstream is single-operator.
 - **LLM proxy.** Free-tier Gemini key never reaches the client.
-- **Memory engine write path.** tlxkull's RAG is read-mostly.
+- **Memory engine write path.** internal-upstream's RAG is read-mostly.
 
 ---
 
@@ -296,7 +296,7 @@ Goal: <one sentence>
 
 > Session: **"Acquisition pipeline (URL → JS files + sourcemaps)"**
 >
-> 1. **[PARALLEL]** Vendor `js-harvest` skill from tlxkull → `backend/pillars/sast/acquisition/harvester.py`. Subagent: `general-purpose`.
+> 1. **[PARALLEL]** Vendor `js-harvest` skill from internal-upstream → `backend/pillars/sast/acquisition/harvester.py`. Subagent: `general-purpose`.
 > 2. **[PARALLEL]** Vendor `sourcemap-explode` skill → `backend/pillars/sast/acquisition/sourcemap.py`. Subagent: `general-purpose`.
 > 3. **[PARALLEL]** Write fixture: minimal React app with sourcemap published → `tests/fixtures/react-min/`. Subagent: `general-purpose`.
 > 4. **[SEQUENTIAL, after 1+2+3]** Wire harvester + sourcemap into one async pipeline; test on fixture. Main agent.
@@ -334,9 +334,9 @@ Tasks (all SEQUENTIAL because each depends on prior layout):
 1. Init git, `main` branch protected, `.gitignore` (Python + Node + `runs/`).
 2. Create monorepo layout: `backend/`, `backend/pillars/{memory,sast,coverage,runtime}/`, `frontend/`, `infra/`, `tests/`, `runs/`.
 3. `justfile` with stub targets: `dev-backend`, `dev-frontend`, `dev-worker`, `test`, `deploy`.
-4. `VENDORED.md` with upstream tlxkull SHA template.
+4. `VENDORED.md` with upstream internal-upstream SHA template.
 
-### Session 1 — `chore/vendor-tlxkull` (parallel-heavy)
+### Session 1 — `chore/vendor-internal-upstream` (parallel-heavy)
 
 Tasks:
 

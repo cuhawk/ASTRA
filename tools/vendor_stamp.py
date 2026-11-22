@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 STAMPED_MARKER = "vendored-from:"
-UPSTREAM_URL = "https://github.com/cuhawk/tlxkull"
+UPSTREAM_SOURCE = "internal-upstream"
 
 EXT_COMMENT = {".py": "#", ".md": "<!--", ".js": "//", ".mjs": "//", ".cjs": "//", ".ts": "//"}
 SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "node_modules"}
@@ -26,7 +26,7 @@ SKIP_DIRS = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", "node
 
 def make_line_header(rel_path: str, sha: str, imported_on: str, tok: str) -> str:
     return (
-        f"{tok} vendored-from: {UPSTREAM_URL}\n"
+        f"{tok} vendored-from: {UPSTREAM_SOURCE}\n"
         f"{tok} upstream-path: {rel_path}\n"
         f"{tok} upstream-sha:  {sha}\n"
         f"{tok} imported-on:   {imported_on}\n"
@@ -39,7 +39,7 @@ def make_line_header(rel_path: str, sha: str, imported_on: str, tok: str) -> str
 def make_md_header(rel_path: str, sha: str, imported_on: str) -> str:
     return (
         f"<!--\n"
-        f"vendored-from: {UPSTREAM_URL}\n"
+        f"vendored-from: {UPSTREAM_SOURCE}\n"
         f"upstream-path: {rel_path}\n"
         f"upstream-sha:  {sha}\n"
         f"imported-on:   {imported_on}\n"

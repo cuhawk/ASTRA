@@ -1,4 +1,4 @@
-# vendored-from: https://github.com/cuhawk/tlxkull
+# vendored-from: internal-upstream
 # upstream-path: .claude/skills/js-harvest/SKILL.md
 # upstream-sha:  83cae232b94e7998ef543c72e8e7302617d438a0
 # imported-on:   2026-05-22
