@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// vendored-from: https://github.com/cuhawk/tlxkull
+// vendored-from: internal-upstream
 // upstream-path: tlx/modules/js_analyzer/deobfuscate_wrapper.js
 // upstream-sha:  83cae232b94e7998ef543c72e8e7302617d438a0
 // imported-on:   2026-05-22

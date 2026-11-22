@@ -5,7 +5,7 @@ Goal: Wire the acquisition pipeline (Session 3) through a static callgraph extra
 
 ## Decisions (locked 2026-05-22)
 
-- **Scope reduction vs CLAUDE.md §12 Session 6:** the vendored `tlxkull` `js_analyzer` carries a deep kernel/MCP dependency tree (`structlog`, `kernel.modules`, ChromaDB, etc.) that we don't want to pull into ASTRA wholesale. For MVP we ship an ASTRA-native tree-sitter-based callgraph extractor that emits Function nodes + CALLS edges. Interprocedural taint, framework detect, async edges are deferred to a later "ports" session.
+- **Scope reduction vs CLAUDE.md §12 Session 6:** the vendored `<private-upstream-repo>` `js_analyzer` carries a deep kernel/MCP dependency tree (`structlog`, `kernel.modules`, ChromaDB, etc.) that we don't want to pull into ASTRA wholesale. For MVP we ship an ASTRA-native tree-sitter-based callgraph extractor that emits Function nodes + CALLS edges. Interprocedural taint, framework detect, async edges are deferred to a later "ports" session.
 - **Worker queue:** also deferred. Use FastAPI `BackgroundTasks` for in-process background execution. RQ on Redis is the right answer for production scale (CLAUDE.md §5); switching the entry point later is a 30-LOC change. Documented as follow-up.
 - **AST:** `tree-sitter` + `tree-sitter-typescript` (lightweight, pure Python wheel ships the .so).
 - **Run lifecycle:** new `runs` SQLite table tracks `id`, `user_id`, `url`, `status` (`pending|acquiring|analyzing|done|failed`), timestamps, error message. `RunLayout` from Session 2 still owns the filesystem layout.

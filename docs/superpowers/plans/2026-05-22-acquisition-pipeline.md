@@ -7,7 +7,7 @@ Goal: Given a URL + scope, fetch every reachable JS asset (script tags, dynamic 
 
 - **Crawler runtime:** Playwright headless Chromium. Matches CLAUDE.md §3 Pillar 2 spec. Browser install one-shot via `playwright install chromium`. ~300MB price worth paying — Session 7 (coverage) needs it anyway.
 - **Sourcemap recon (hidden-map brute force):** **deferred**. Port only `bin/explode_sourcemap.py` (114 LOC, stdlib). Defer `bin/sourcemap_recon.py` (Sentry artifact API + per-host attempt cap) to a later session.
-- **Source of upstream code:** `~/Documents/TLX` at SHA `83cae232b94e7998ef543c72e8e7302617d438a0` (already-verified vendor source per memory).
+- **Source of upstream code:** `/path/to/private-upstream` at SHA `<pinned-sha>` (already-verified vendor source per memory).
 
 ## Layout
 
@@ -56,7 +56,7 @@ tests/fixtures/react-min/
 
 ## Out of scope
 
-- Hidden-map brute-force recon (tlxkull `bin/sourcemap_recon.py`) — later session.
+- Hidden-map brute-force recon (`<private-upstream-repo>` `bin/sourcemap_recon.py`) — later session.
 - Sentry artifact API enumeration — never on by default.
 - Caido-aware auth-walled crawling — Session 8 / post-MVP.
 - Persistent cookie / login flow — caller's job.

@@ -41,7 +41,7 @@ python_functions = ["test_*"]
 addopts = [
     "-ra",
     "--strict-markers",
-    # Vendored tlxkull tests reference its `modules.*` / `kernel.*` namespaces,
+    # Vendored internal-upstream tests reference its `modules.*` / `kernel.*` namespaces,
     # which we deliberately do not expose. Skip the whole vendored test trees —
     # re-vendor / port when we wire them into ASTRA proper.
     "--ignore=backend/pillars/sast/tests",

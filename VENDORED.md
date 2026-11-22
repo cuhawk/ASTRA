@@ -4,11 +4,11 @@ This file tracks every component copied or `git subtree`-imported from an upstre
 
 ## Source repositories
 
-| Short name | Upstream URL                          | License (as of import) |
-|------------|---------------------------------------|------------------------|
-| tlxkull    | https://github.com/cuhawk/tlxkull     | proprietary — no LICENSE in upstream root |
+| Upstream identifier | License (as of import) |
+|---------------------|------------------------|
+| `internal-upstream` | proprietary — no LICENSE in upstream root |
 
-Local working checkout: `~/Documents/TLX` (use as source for re-vendor; verify SHA before copying).
+Local working checkout: `/path/to/private-upstream` (use as source for re-vendor; verify SHA before copying).
 
 ## Vendored components
 
@@ -30,7 +30,7 @@ Local working checkout: `~/Documents/TLX` (use as source for re-vendor; verify S
 Every vendored file MUST start with this header block (adjust comment syntax per language):
 
 ```
-# vendored-from: https://github.com/cuhawk/tlxkull
+# vendored-from: internal-upstream
 # upstream-path: tlx/modules/<module>/<file>
 # upstream-sha:  <full 40-char SHA>
 # imported-on:   YYYY-MM-DD
@@ -40,7 +40,7 @@ Every vendored file MUST start with this header block (adjust comment syntax per
 
 ## Import method
 
-- **Preferred:** `git subtree add --prefix=<astra/path> <tlxkull-url> <sha> --squash`.
+- **Preferred:** `git subtree add --prefix=<astra/path> <private-upstream-repo> <sha> --squash`.
 - **Fallback (small, isolated files):** copy + header block.
 - Either way, the row in the table above is mandatory.
 

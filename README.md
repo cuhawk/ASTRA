@@ -52,7 +52,7 @@ ASTRA is the missing middle: a callgraph-grounded, framework-aware static prior 
 
 Local-development MVP. Sessions 0–9 of the roadmap in `CLAUDE.md` §12 are landed:
 
-- **0–1** monorepo scaffold + vendored tlxkull modules (sast, memory, mcp, prompts) @ `83cae23`.
+- **0–1** monorepo scaffold + vendored internal-upstream modules (sast, memory, mcp, prompts) @ `83cae23`.
 - **2** embedded substrate — Kuzu graph + LanceDB vectors + per-run filesystem layout.
 - **3** acquisition pipeline — Playwright headless Chromium harvests JS + sourcemaps; pure-stdlib sourcemap exploder reconstructs the original source tree.
 - **4** auth + per-user quota + Anthropic-key vault — GitHub OAuth, Redis-backed daily counter (Lua-atomic), AES-256-GCM envelope encryption with `(user_id, provider)` AAD.
@@ -64,7 +64,7 @@ Local-development MVP. Sessions 0–9 of the roadmap in `CLAUDE.md` §12 are lan
 
 176 tests, `just test` finishes in ~30s.
 
-A substantial portion of the analysis core is vendored from a private reference workspace (`tlxkull`). See `VENDORED.md` for upstream provenance.
+A substantial portion of the analysis core is vendored from a private reference workspace (`internal-upstream`). See `VENDORED.md` for upstream provenance.
 
 **Not yet shipped:** real RQ/Dramatiq worker, cytoscape graph canvas, sourcemap byte-range mapping for minified bundles, interprocedural taint port, deploy pipeline (Fly/Railway).
 

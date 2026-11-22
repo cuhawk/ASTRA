@@ -10,7 +10,7 @@
 
 **Pre-flight check:**
 - Confirm `just` is installed: `command -v just`. If missing: `brew install just`.
-- Confirm we are running inside `/Users/soural/Documents/ASTRA`: `pwd`.
+- Confirm we are running inside `/path/to/ASTRA`: `pwd`.
 - Confirm repo is NOT already a git repo: `git rev-parse --is-inside-work-tree 2>&1` should print "fatal: not a git repository".
 
 **Out of scope (defer to later sessions):**
@@ -28,7 +28,7 @@ Files this session creates:
 ```
 ASTRA/
 ├── .gitignore                          # ignores Python, Node, runs/, env, OS cruft
-├── VENDORED.md                         # provenance ledger for tlxkull vendored code
+├── VENDORED.md                         # provenance ledger for <private-upstream-repo> vendored code
 ├── justfile                            # task runner with stub recipes
 ├── backend/
 │   ├── .gitkeep
@@ -61,11 +61,11 @@ Files this session leaves alone (already exist):
 - [ ] **Step 1: Initialize repo on `main`**
 
 ```bash
-cd /Users/soural/Documents/ASTRA
+cd /path/to/ASTRA
 git init -b main
 ```
 
-Expected output: `Initialized empty Git repository in /Users/soural/Documents/ASTRA/.git/`
+Expected output: `Initialized empty Git repository in /path/to/ASTRA/.git/`
 
 - [ ] **Step 2: Verify branch is `main`**
 
@@ -86,8 +86,8 @@ git config --global user.email && git config --global user.name
 If both print values, skip. If either is empty, set repo-local values:
 
 ```bash
-git config user.email "soural1417@gmail.com"
-git config user.name "soural"
+git config user.email "you@example.com"
+git config user.name "Your Name"
 ```
 
 - [ ] **Step 4: Do NOT commit yet**
@@ -103,7 +103,7 @@ Wait until `.gitignore` is in place (Task 2) so unwanted files never enter histo
 
 - [ ] **Step 1: Write `.gitignore`**
 
-Create `/Users/soural/Documents/ASTRA/.gitignore` with this exact content:
+Create `/path/to/ASTRA/.gitignore` with this exact content:
 
 ```gitignore
 # ===== ASTRA-specific =====
@@ -216,7 +216,7 @@ Expected: commit succeeds; `git log --oneline` shows one commit.
 - [ ] **Step 1: Create directories and `.gitkeep` files**
 
 ```bash
-cd /Users/soural/Documents/ASTRA
+cd /path/to/ASTRA
 mkdir -p backend/pillars/memory \
          backend/pillars/sast \
          backend/pillars/coverage \
@@ -281,7 +281,7 @@ Expected: prints a version string (e.g., `just 1.x.x`). If `brew install` runs, 
 
 - [ ] **Step 2: Write `justfile`**
 
-Create `/Users/soural/Documents/ASTRA/justfile` with this exact content:
+Create `/path/to/ASTRA/justfile` with this exact content:
 
 ```just
 # ASTRA task runner. Recipes are stubs in Session 0; each session fills in its targets.
@@ -357,7 +357,7 @@ git commit -m "chore: add justfile with stub recipes for dev/test/deploy"
 
 - [ ] **Step 1: Write `VENDORED.md`**
 
-Create `/Users/soural/Documents/ASTRA/VENDORED.md` with this exact content:
+Create `/path/to/ASTRA/VENDORED.md` with this exact content:
 
 ````markdown
 # Vendored Code Provenance
@@ -368,7 +368,7 @@ This file tracks every component copied or `git subtree`-imported from an upstre
 
 | Short name | Upstream URL                          | License (as of import) |
 |------------|---------------------------------------|------------------------|
-| tlxkull    | https://github.com/cuhawk/tlxkull     | (record on first import) |
+| `<private-upstream-repo>` | `<private-upstream-repo>` | (record on first import) |
 
 ## Vendored components
 
@@ -383,7 +383,7 @@ This file tracks every component copied or `git subtree`-imported from an upstre
 Every vendored file MUST start with this header block (adjust comment syntax per language):
 
 ```
-# vendored-from: https://github.com/cuhawk/tlxkull
+# vendored-from: <private-upstream-repo>
 # upstream-path: tlx/modules/<module>/<file>
 # upstream-sha:  <full 40-char SHA>
 # imported-on:   YYYY-MM-DD
@@ -393,7 +393,7 @@ Every vendored file MUST start with this header block (adjust comment syntax per
 
 ## Import method
 
-- **Preferred:** `git subtree add --prefix=<astra/path> <tlxkull-url> <sha> --squash`.
+- **Preferred:** `git subtree add --prefix=<astra/path> <private-upstream-repo> <sha> --squash`.
 - **Fallback (small, isolated files):** copy + header block.
 - Either way, the row in the table above is mandatory.
 
@@ -526,8 +526,8 @@ Expected: `5`.
 
 - Do not create a GitHub remote yet. The user will decide host (GitHub vs other) and visibility (public vs private) before pushing. Remote setup belongs at end of Session 0 or in Session 10.
 - Do not install Python, Node, or any dependencies. Each owning session handles its own toolchain.
-- Do not vendor any tlxkull code yet. That is Session 1.
+- Do not vendor any `<private-upstream-repo>` code yet. That is Session 1.
 
 ## Next session
 
-`chore/vendor-tlxkull` (Session 1). Tasks 1–4 are PARALLEL subagent dispatches; only the SHA-recording step is sequential. Use `superpowers:dispatching-parallel-agents`.
+`chore/vendor-internal-upstream` (Session 1). Tasks 1–4 are PARALLEL subagent dispatches; only the SHA-recording step is sequential. Use `superpowers:dispatching-parallel-agents`.
